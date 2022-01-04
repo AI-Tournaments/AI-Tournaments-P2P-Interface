@@ -40,6 +40,9 @@
 					return peer;
 				}
 				function connectToServer(){
+					addEventListener('beforeunload', event=>{
+						interfaceWindow.close();
+					});
 					peer = createPeer('', ()=>{
 						let input = document.getElementById('interface-id');
 						connectionClient = peer.connect(serverPeerID ?? input.value);
@@ -52,10 +55,20 @@
 									if(data.message.iframeId){
 										document.getElementById('client-id').innerText = data.message.iframeId;
 									}
-									interfacePromise.then(() => {
-										updateMessageCounter();
-										interfaceWindow.postMessage(data.message, '*');
-									});
+									if(data.message === 'KILL'){
+										let checkbox = document.getElementById('close-when-done');
+										if(checkbox.checked){
+											interfaceWindow.close();
+										}
+										checkbox.disabled = true;
+										updateStatus('Done! This tab can be closed.');
+										document.body.disabled = true;
+									}else{
+										interfacePromise.then(() => {
+											updateMessageCounter();
+											interfaceWindow.postMessage(data.message, '*');
+										});
+									}
 								}else{
 									if(!data.startsWith('http')){
 										data = 'https://'+data;
@@ -79,6 +92,9 @@
 					messageCounter += 1;
 					document.getElementById('message-counter').innerText = messageCounter;
 				}
+				function updateStatus(status=''){
+					document.getElementById('status').innerText = status;
+				}
 				if(serverPeerID){
 					connectToServer();
 				}else{
@@ -87,11 +103,14 @@
 				document.getElementById('title').innerText += ' ' + (arenaInterface ? 'host' : 'client');
 				document.title = document.title.replace('*', arenaInterface ? 'host' : 'client');
 				if(arenaInterface){
-					document.getElementById('inputs').classList.add('hidden');
+					[...document.getElementsByClassName('inputs')].forEach(e => e.classList.add('hidden'));
 					peer = createPeer('', ()=>{
 						document.getElementById('peer-id').innerText = peer.id;
 						document.location.hash = '!'+peer.id;
 						peer.on('connection', (c)=>{
+							addEventListener('beforeunload', event=>{
+								connectionServer.send({message: 'KILL'})
+							});
 							if(messageCounter){
 								console.error('Connection already established (connection dropped)', c);
 							}else{
@@ -109,7 +128,7 @@
 												break;
 										}
 									}else{
-										console.log('Interface was not opened by window.open().');
+										console.warn('Interface was not opened by window.open().');
 									}
 								});
 								connectionServer.on('error', (err)=>{
@@ -120,7 +139,6 @@
 					});
 				}
 				window.addEventListener('message', messageEvent => {
-					console.log('message', messageEvent.data);
 					if(connectionServer){
 						if(messageEvent.source === interfaceWindow){
 							postMessage(messageEvent.data);
@@ -142,7 +160,7 @@
 			<h1 id="title">AI-Tournaments peered interface</h1>
 			<div>
 				<b>Peer: </b><span id="peer-id"></span>
-				<span id="inputs">
+				<span class="inputs">
 					<input id="interface-id" type="text" autocomplete="off">
 					<input id="interface-connect" type="button" value="Connect">
 				</span>
@@ -155,6 +173,12 @@
 			</div>
 			<div>
 				<b>Interface ID: </b><span id="client-id"></span>
+			</div>
+			<div class="inputs">
+				<b>Close when done: </b><input id="close-when-done" type="checkbox" checked>
+			</div>
+			<div>
+				<b>Status: </b><span id="status"></span>
 			</div>
 		</div>
 	</body>

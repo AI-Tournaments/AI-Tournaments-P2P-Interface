@@ -22,14 +22,14 @@
 				let connectionServer;
 				let connectionClient;
 				let interfaceWindow;
-				let serverPeer;
+				let serverPeerID;
 				let messageCounter = 0;
 				let interfaceReady;
 				let interfacePromise = new Promise(resolve => interfaceReady = resolve);
 				let arenaInterface = window.location.hash.substr(1);
 				let buttonConnect = document.getElementById('interface-connect');
 				if(arenaInterface.startsWith('!')){
-					serverPeer = arenaInterface.substr(1);
+					serverPeerID = arenaInterface.substr(1);
 					arenaInterface = null;
 				}
 				function createPeer(id, callback=()=>{}){
@@ -42,7 +42,7 @@
 				function connectToServer(){
 					peer = createPeer('', ()=>{
 						let input = document.getElementById('interface-id');
-						connectionClient = peer.connect(serverPeer ?? input.value);
+						connectionClient = peer.connect(serverPeerID ?? input.value);
 						connectionClient.on('open', ()=>{
 							input.disabled = true;
 							buttonConnect.disabled = true;
@@ -79,7 +79,7 @@
 					messageCounter += 1;
 					document.getElementById('message-counter').innerText = messageCounter;
 				}
-				if(serverPeer){
+				if(serverPeerID){
 					connectToServer();
 				}else{
 					buttonConnect.addEventListener('click', connectToServer);

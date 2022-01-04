@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>AI-Tournaments * interface</title>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-TJFMG29186"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-TJFMG29186');</script>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport">
+		<meta content="yes" name="mobile-web-app-capable">
+		<style>
+			#wrapper {
+				margin: 8px;
+			}
+			.hidden {
+				display: none !important;
+			}
+		</style>
+		<script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+		<script>
+			'use strict'
+			function a(){
+				let peer;
+				let connectionServer;
+				let connectionClient;
+				let interfaceWindow;
+				let serverPeer;
+				let messageCounter = 0;
+				let interfaceReady;
+				let interfacePromise = new Promise(resolve => interfaceReady = resolve);
+				let arenaInterface = window.location.hash.substr(1);
+				let buttonConnect = document.getElementById('interface-connect');
+				if(arenaInterface.startsWith('!')){
+					serverPeer = arenaInterface.substr(1);
+					arenaInterface = null;
+				}
+				function createPeer(id, callback=()=>{}){
+					let peer = new Peer(id.toLocaleLowerCase());
+					peer.on('open', (ID)=>{
+						callback();
+					});
+					return peer;
+				}
+				function connectToServer(){
+					peer = createPeer('', ()=>{
+						let input = document.getElementById('interface-id');
+						connectionClient = peer.connect(serverPeer ?? input.value);
+						connectionClient.on('open', ()=>{
+							input.disabled = true;
+							buttonConnect.disabled = true;
+							connectionClient.send({type: 'init-client'});
+							connectionClient.on('data', (data)=>{
+								if(arenaInterface){
+									if(data.message.iframeId){
+										document.getElementById('client-id').innerText = data.message.iframeId;
+									}
+									interfacePromise.then(() => {
+										updateMessageCounter();
+										interfaceWindow.postMessage(data.message, '*');
+									});
+								}else{
+									if(!data.startsWith('http')){
+										data = 'https://'+data;
+									}
+									arenaInterface = data;
+									interfaceWindow = window.open(arenaInterface);
+									interfaceWindow.addEventListener('message', messageEvent => {
+										if(messageEvent.source === interfaceWindow){
+											connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
+										}
+									});
+									if(!interfaceWindow){
+										console.error('Could not open interface. Was popup is blocked?', arenaInterface);
+									}
+								}
+							});
+						});
+					});
+				}
+				function updateMessageCounter(){
+					messageCounter += 1;
+					document.getElementById('message-counter').innerText = messageCounter;
+				}
+				if(serverPeer){
+					connectToServer();
+				}else{
+					buttonConnect.addEventListener('click', connectToServer);
+				}
+				document.getElementById('title').innerText += ' ' + (arenaInterface ? 'host' : 'client');
+				document.title = document.title.replace('*', arenaInterface ? 'host' : 'client');
+				if(arenaInterface){
+					document.getElementById('inputs').classList.add('hidden');
+					peer = createPeer('', ()=>{
+						document.getElementById('peer-id').innerText = peer.id;
+						document.location.hash = '!'+peer.id;
+						peer.on('connection', (c)=>{
+							if(messageCounter){
+								console.error('Connection already established (connection dropped)', c);
+							}else{
+								connectionServer = c;
+								connectionServer.on('data', (data)=>{
+									if(window.opener){
+										switch(data.type){
+											case 'init-client':
+											connectionServer.send(arenaInterface);
+												window.opener.postMessage(null, '*');
+												break;
+											default:
+												updateMessageCounter();
+												window.opener.postMessage(data.message, '*');
+												break;
+										}
+									}else{
+										console.log('Interface was not opened by window.open().');
+									}
+								});
+								connectionServer.on('error', (err)=>{
+									console.error(err.message);
+								});
+							}
+						});
+					});
+				}
+				window.addEventListener('message', messageEvent => {
+					console.log('message', messageEvent.data);
+					if(connectionServer){
+						if(messageEvent.source === interfaceWindow){
+							postMessage(messageEvent.data);
+						}else{
+							connectionServer.send({message: messageEvent.data});
+						}
+					}else if(connectionClient){
+						if(messageCounter){
+							connectionClient.send({message: messageEvent.data});
+						}
+						interfaceReady();
+					}
+				});
+			}
+		</script>
+	</head>
+	<body onload="a()">
+		<div id="wrapper">
+			<h1 id="title">AI-Tournaments peered interface</h1>
+			<div>
+				<b>Peer: </b><span id="peer-id"></span>
+				<span id="inputs">
+					<input id="interface-id" type="text" autocomplete="off">
+					<input id="interface-connect" type="button" value="Connect">
+				</span>
+			</div>
+			<div>
+				<b>Message counter: </b><span id="message-counter"></span>
+			</div>
+			<div>
+				<b>Window counter: </b><span id="window-counter"><i>unusable</i></span>
+			</div>
+			<div>
+				<b>Interface ID: </b><span id="client-id"></span>
+			</div>
+		</div>
+	</body>
+</html>

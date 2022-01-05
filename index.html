@@ -27,6 +27,7 @@
 				let interfaceReady;
 				let interfacePromise = new Promise(resolve => interfaceReady = resolve);
 				let arenaInterface = window.location.hash.substr(1);
+				window.location.hash = '';
 				let buttonConnect = document.getElementById('interface-connect');
 				if(arenaInterface.startsWith('!')){
 					serverPeerID = arenaInterface.substr(1);

@@ -76,12 +76,13 @@
 									}
 									arenaInterface = data;
 									interfaceWindow = window.open(arenaInterface);
-									interfaceWindow.addEventListener('message', messageEvent => {
-										if(messageEvent.source === interfaceWindow){
-											connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
-										}
-									});
-									if(!interfaceWindow){
+									if(interfaceWindow){
+										interfaceWindow.addEventListener('message', messageEvent => {
+											if(messageEvent.source === interfaceWindow){
+												connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
+											}
+										});
+									}else{
 										updateStatus('Could not open interface. Was popup is blocked?');
 									}
 								}

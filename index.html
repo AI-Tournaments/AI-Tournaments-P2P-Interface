@@ -65,8 +65,14 @@
 										updateStatus('Done! This tab can be closed.');
 										document.body.disabled = true;
 									}else{
-										interfacePromise.then(() => {
+										interfacePromise.then(i => {
+											interfaceWindow = i;
 											updateMessageCounter();
+											interfaceWindow.addEventListener('message', messageEvent => {
+												if(messageEvent.source === interfaceWindow){
+													connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
+												}
+											});
 											interfaceWindow.postMessage(data.message, '*');
 										});
 									}
@@ -75,15 +81,9 @@
 										data = 'https://'+data;
 									}
 									arenaInterface = data;
-									interfaceWindow = window.open(arenaInterface);
-									if(interfaceWindow){
-										interfaceWindow.addEventListener('message', messageEvent => {
-											if(messageEvent.source === interfaceWindow){
-												connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
-											}
-										});
-									}else{
-										updateStatus('Could not open interface. Was popup is blocked?');
+									if(!window.open(arenaInterface)){
+										updateStatus('Could not open interface. Was popup is blocked?'+interfaceUrl);
+										console.error('Could not open interface', interfaceUrl);
 									}
 								}
 							});
@@ -151,7 +151,7 @@
 						if(messageCounter){
 							connectionClient.send({message: messageEvent.data});
 						}
-						interfaceReady();
+						interfaceReady(messageEvent.source);
 					}
 				});
 			}

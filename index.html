@@ -82,8 +82,7 @@
 									}
 									arenaInterface = data;
 									if(!window.open(arenaInterface)){
-										updateStatus('Could not open interface. Was popup is blocked? '+arenaInterface);
-										console.error('Could not open interface', arenaInterface);
+										updateStatus('Could not open interface. Was popup blocked? '+arenaInterface);
 									}
 								}
 							});
@@ -114,7 +113,7 @@
 								connectionServer.send({message: 'KILL'})
 							});
 							if(messageCounter){
-								console.error('Connection already established (connection dropped)', c);
+								updateStatus('Connection already established (connection dropped)');
 							}else{
 								connectionServer = c;
 								connectionServer.on('data', (data)=>{
@@ -130,11 +129,11 @@
 												break;
 										}
 									}else{
-										console.warn('Interface was not opened by window.open().');
+										updateStatus('Interface was not opened by window.open().');
 									}
 								});
 								connectionServer.on('error', (err)=>{
-									console.error(err.message);
+									updateStatus(err.message);
 								});
 							}
 						});

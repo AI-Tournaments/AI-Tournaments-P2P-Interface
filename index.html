@@ -89,11 +89,11 @@
 									function tryOpenWindow(){
 										let windowAttempt = window.open();
 										if(windowAttempt){
-											tryAgain.parentElement.classList.add('hidden');
+											tryAgain.classList.add('hidden');
 											windowAttempt.close();
 											resolve();
 										}else{
-											tryAgain.parentElement.classList.remove('hidden');
+											tryAgain.classList.remove('hidden');
 											updateStatus('Could not open interface'+(attempt ? ' (attempt '+attempt+')' : '')+'. Was popup blocked? Resolve and click "Try again".');
 											attempt++;
 										}
@@ -195,10 +195,7 @@
 				<b>Close when done: </b><input id="close-when-done" type="checkbox" checked>
 			</div>
 			<div>
-				<b>Status: </b><span id="status"></span>
-			</div>
-			<div class="hidden">
-				<input id="try-again" type="button" value="Try again">
+				<b>Status: </b><span id="status"></span> <input id="try-again" class="hidden" type="button" value="Try again">
 			</div>
 		</div>
 	</body>

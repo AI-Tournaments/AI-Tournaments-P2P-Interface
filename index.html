@@ -50,6 +50,7 @@
 						connectionClient.on('open', ()=>{
 							input.disabled = true;
 							buttonConnect.disabled = true;
+							connectionClient.send({type: 'init-client'});
 							connectionClient.on('data', (data)=>{
 								if(arenaInterface){
 									if(data.message.iframeId){
@@ -73,16 +74,15 @@
 									if(!data.startsWith('http')){
 										data = 'https://'+data;
 									}
+									arenaInterface = data;
 									let resolve;
 									new Promise(r => resolve = r).then(()=>{
-										arenaInterface = data;
 										interfaceWindow = window.open(arenaInterface);
 										interfaceWindow.addEventListener('message', messageEvent => {
 											if(messageEvent.source === interfaceWindow){
 												connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
 											}
 										});
-										connectionClient.send({type: 'init-client'});
 									});
 									let attempt = 0;
 									let tryAgain = document.getElementById('try-again');

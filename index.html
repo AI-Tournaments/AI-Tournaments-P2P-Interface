@@ -66,7 +66,7 @@
 										document.body.disabled = true;
 									}else{
 										interfacePromise.then(i => {
-											interfaceWindow = i;
+										//	interfaceWindow = i;
 											updateMessageCounter();
 											interfaceWindow.addEventListener('message', messageEvent => {
 												if(messageEvent.source === interfaceWindow){
@@ -81,9 +81,16 @@
 										data = 'https://'+data;
 									}
 									arenaInterface = data;
-									if(!window.open(arenaInterface)){
-										updateStatus('Could not open interface. Was popup blocked? '+arenaInterface);
+									function tryOpenWindow(){
+										let windowAttempt = window.open(arenaInterface)
+										if(windowAttempt){
+											interfaceWindow = windowAttempt;
+										}else{
+											updateStatus('Could not open interface. Was popup blocked? '+arenaInterface);
+											setTimeout(tryOpenWindow, 1000);
+										}
 									}
+									tryOpenWindow();
 								}
 							});
 						});

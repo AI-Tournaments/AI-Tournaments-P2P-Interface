@@ -50,7 +50,6 @@
 						connectionClient.on('open', ()=>{
 							input.disabled = true;
 							buttonConnect.disabled = true;
-							connectionClient.send({type: 'init-client'});
 							connectionClient.on('data', (data)=>{
 								if(arenaInterface){
 									if(data.message.iframeId){
@@ -83,6 +82,7 @@
 												connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
 											}
 										});
+										connectionClient.send({type: 'init-client'});
 									});
 									let attempt = 0;
 									let tryAgain = document.getElementById('try-again');

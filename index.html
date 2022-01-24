@@ -90,6 +90,7 @@
 										let windowAttempt = window.open();
 										if(windowAttempt){
 											tryAgain.classList.add('hidden');
+											updateStatus();
 											windowAttempt.close();
 											resolve();
 										}else{
@@ -136,7 +137,7 @@
 									if(window.opener){
 										switch(data.type){
 											case 'init-client':
-											connectionServer.send(arenaInterface);
+												connectionServer.send(arenaInterface);
 												window.opener.postMessage(null, '*');
 												break;
 											default:

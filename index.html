@@ -65,14 +65,8 @@
 										updateStatus('Done! This tab can be closed.');
 										document.body.disabled = true;
 									}else{
-										interfacePromise.then(i => {
-											interfaceWindow = i;
+										interfacePromise.then(()=>{
 											updateMessageCounter();
-											interfaceWindow.addEventListener('message', messageEvent => {
-												if(messageEvent.source === interfaceWindow){
-													connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
-												}
-											});
 											interfaceWindow.postMessage(data.message, '*');
 										});
 									}
@@ -80,10 +74,32 @@
 									if(!data.startsWith('http')){
 										data = 'https://'+data;
 									}
-									arenaInterface = data;
-									if(!window.open(arenaInterface)){
-										updateStatus('Could not open interface. Was popup blocked? '+arenaInterface);
+									let resolve;
+									new Promise(r => resolve = r).then(()=>{
+										arenaInterface = data;
+										interfaceWindow = window.open(arenaInterface);
+										interfaceWindow.addEventListener('message', messageEvent => {
+											if(messageEvent.source === interfaceWindow){
+												connectionClient.send(JSON.parse(JSON.stringify(messageEvent.data)));
+											}
+										});
+									});
+									let attempt = 0;
+									let tryAgain = document.getElementById('try-again');
+									function tryOpenWindow(){
+										let windowAttempt = window.open();
+										if(windowAttempt){
+											tryAgain.parentElement.classList.add('hidden');
+											windowAttempt.close();
+											resolve();
+										}else{
+											tryAgain.parentElement.classList.remove('hidden');
+											updateStatus('Could not open interface'+(attempt ? ' (attempt '+attempt+')' : '')+'. Was popup blocked? Resolve and click "Try again".');
+											attempt++;
+										}
 									}
+									tryAgain.addEventListener('click', tryOpenWindow);
+									tryOpenWindow();
 								}
 							});
 						});
@@ -150,7 +166,7 @@
 						if(messageCounter){
 							connectionClient.send({message: messageEvent.data});
 						}
-						interfaceReady(messageEvent.source);
+						interfaceReady();
 					}
 				});
 			}
@@ -180,6 +196,9 @@
 			</div>
 			<div>
 				<b>Status: </b><span id="status"></span>
+			</div>
+			<div class="hidden">
+				<input id="try-again" type="button">
 			</div>
 		</div>
 	</body>

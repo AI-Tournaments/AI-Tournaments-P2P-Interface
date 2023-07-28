@@ -1,5 +1,5 @@
 # AI-Tournaments-P2P-Interface
-Redirect traffic to a peered interface. Append URL arena interface as hash for quick select.<br><i>Example:</i> `!https://chrisacrobat.github.io/AI-Tournaments-P2P-Interface/#http://localhost/interface.html`
+Redirect traffic to a peered interface. Append URL arena interface as hash for quick select.<br><i>Example:</i> `!https://AI-Tournaments.github.io/AI-Tournaments-P2P-Interface/#http://localhost/interface.html`
 
 <b>Possible use cases:</b> <i>(depending on what the peered interface supports)</i>
 - Remote human vs.
